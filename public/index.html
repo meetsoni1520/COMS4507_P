@@ -5,12 +5,7 @@
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <title>AutoProof - Vehicle History Management</title>
     <link rel="stylesheet" href="styles.css">
-    <script 
-        src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" 
-        integrity="sha512-FWPmUMuCQqwhTwuN8eCK8oNqz7RXL3UKxKTHF8B8QnZDl65P1yNHwYz+cj2YgGtHqZUyxXvQmHtYHHm8fxY7g==" 
-        crossorigin="anonymous" 
-        referrerpolicy="no-referrer">
-    </script>
+    <script src="https://cdn.jsdelivr.net/npm/ethers@5.7.2/dist/ethers.umd.min.js"></script>
 </head>
 <body>
     <div class="container">
@@ -66,31 +61,50 @@
             <h2>Record Service</h2>
             <form id="serviceForm">
                 <div class="form-group">
-                    <label for="carId">Car ID:</label>
-                    <input type="number" id="carId" required>
+                    <label for="serviceCarId">Car ID:</label>
+                    <input type="number" id="serviceCarId" required>
                 </div>
                 <div class="form-group">
                     <label for="serviceType">Service Type:</label>
-                    <input type="text" id="serviceType" required>
+                    <select id="serviceType" required>
+                        <option value="Regular Maintenance">Regular Maintenance</option>
+                        <option value="Repair">Repair</option>
+                        <option value="Inspection">Inspection</option>
+                        <option value="Modification">Modification</option>
+                    </select>
                 </div>
                 <div class="form-group">
-                    <label for="description">Description:</label>
-                    <textarea id="description" required></textarea>
+                    <label for="serviceDescription">Description:</label>
+                    <textarea id="serviceDescription" required></textarea>
                 </div>
                 <div class="form-group">
                     <label for="serviceProvider">Service Provider:</label>
                     <input type="text" id="serviceProvider" required>
                 </div>
                 <div class="form-group">
-                    <label for="mileage">Mileage:</label>
-                    <input type="number" id="mileage" required>
+                    <label for="serviceMileage">Mileage:</label>
+                    <input type="number" id="serviceMileage" required>
                 </div>
                 <div class="form-group">
-                    <label for="parts">Parts Replaced (comma-separated):</label>
-                    <input type="text" id="parts" placeholder="e.g., Oil Filter, Engine Oil">
+                    <label for="serviceParts">Parts Replaced (comma-separated):</label>
+                    <input type="text" id="serviceParts" placeholder="e.g., Oil Filter, Engine Oil">
                 </div>
                 <button type="submit" class="btn">Record Service</button>
             </form>
+
+            <div class="sub-section">
+                <h3>View Service History</h3>
+                <form id="viewServiceHistoryForm">
+                    <div class="form-group">
+                        <label for="historyCarId">Car ID:</label>
+                        <input type="number" id="historyCarId" required>
+                    </div>
+                    <button type="submit" class="btn">View History</button>
+                </form>
+                <div id="serviceHistoryContainer" class="history-container">
+                    <!-- Service history will be displayed here -->
+                </div>
+            </div>
         </div>
 
         <div id="transfer" class="tab-content">

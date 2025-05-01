@@ -479,8 +479,8 @@
       ]
     },
     "C:\\Users\\alvee.SOLARISAI-COMP\\Documents\\COMS4507\\contracts\\ServiceHistory.sol": {
-      "lastModificationDate": 1746066882038,
-      "contentHash": "0dee0e1e98e9d2c1cb60457fdf5c5a5e",
+      "lastModificationDate": 1746073066441,
+      "contentHash": "83aa338402118f64d038ab906c77c5b6",
       "sourceName": "contracts/ServiceHistory.sol",
       "solcConfig": {
         "version": "0.8.17",

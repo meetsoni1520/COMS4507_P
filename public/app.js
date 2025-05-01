@@ -2,6 +2,7 @@
 const CAR_NFT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const OWNERSHIP_TRANSFER_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 const TRANSACTION_MANAGER_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
+const SERVICE_HISTORY_ADDRESS = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707";
 
 // Contract ABIs
 const CAR_NFT_ABI = [
@@ -27,67 +28,124 @@ const TRANSACTION_MANAGER_ABI = [
     "function getCarTransactionHistory(uint256 carId) public view returns (uint256[])"
 ];
 
+// Add Service History ABI
+const SERVICE_HISTORY_ABI = [
+    "function recordService(uint256 carId, string memory serviceType, string memory description, string memory provider, uint256 mileage, string memory parts) public",
+    "function getServiceHistory(uint256 carId) public view returns (tuple(string serviceType, string description, string provider, uint256 mileage, string parts, uint256 timestamp)[])"
+];
+
+// Global variables for provider, signer and contracts
 let provider;
 let signer;
 let carNFT;
 let ownershipTransfer;
 let transactionManager;
+let serviceHistory;
 
 // Initialize Web3 and contracts
 async function init() {
     try {
-        console.log("Starting initialization...");
-        
-        // Check if ethers is available
-        if (typeof ethers === 'undefined') {
-            throw new Error("Ethers.js is not loaded. Please check your internet connection and refresh the page.");
-        }
-        console.log("Ethers.js is loaded");
-
-        // Check if MetaMask is installed
         if (!window.ethereum) {
-            throw new Error("MetaMask is not installed. Please install MetaMask to use this application.");
+            throw new Error("MetaMask not found! Please install MetaMask.");
         }
-        console.log("MetaMask is detected");
 
         // Request account access
-        const accounts = await window.ethereum.request({ method: 'eth_requestAccounts' });
-        console.log("Connected account:", accounts[0]);
+        await window.ethereum.request({ method: 'eth_requestAccounts' });
         
-        // Initialize provider
+        // Create provider
         provider = new ethers.providers.Web3Provider(window.ethereum);
-        console.log("Provider initialized");
         
-        // Get signer
+        // Get the signer
         signer = provider.getSigner();
-        console.log("Signer obtained");
-
+        
         // Initialize contracts
         carNFT = new ethers.Contract(CAR_NFT_ADDRESS, CAR_NFT_ABI, signer);
-        console.log("CarNFT contract initialized");
-        
         ownershipTransfer = new ethers.Contract(OWNERSHIP_TRANSFER_ADDRESS, OWNERSHIP_TRANSFER_ABI, signer);
-        console.log("OwnershipTransfer contract initialized");
-        
         transactionManager = new ethers.Contract(TRANSACTION_MANAGER_ADDRESS, TRANSACTION_MANAGER_ABI, signer);
-        console.log("TransactionManager contract initialized");
+        serviceHistory = new ethers.Contract(SERVICE_HISTORY_ADDRESS, SERVICE_HISTORY_ABI, signer);
+
+        console.log("Web3 initialized successfully!");
+        showNotification("Connected to MetaMask successfully!", true);
+
+        // Add event listeners after contracts are initialized
+        addEventListeners();
+        
+        // Listen for account changes
+        window.ethereum.on('accountsChanged', () => {
+            window.location.reload();
+        });
 
         // Listen for network changes
-        window.ethereum.on('chainChanged', (chainId) => {
-            console.log("Network changed. Reloading...");
+        window.ethereum.on('chainChanged', () => {
             window.location.reload();
         });
 
-        // Listen for account changes
-        window.ethereum.on('accountsChanged', (accounts) => {
-            console.log("Account changed. Reloading...");
-            window.location.reload();
-        });
-
-        console.log("Initialization complete!");
     } catch (error) {
-        console.error("Initialization error:", error);
-        alert(`Error initializing application: ${error.message}`);
+        console.error("Error initializing application:", error);
+        showNotification(error.message, false);
+    }
+}
+
+// Function to add event listeners
+function addEventListeners() {
+    // Register form
+    const registerForm = document.getElementById('registerForm');
+    if (registerForm) {
+        registerForm.addEventListener('submit', handleRegisterSubmit);
+    }
+
+    // Service forms
+    const serviceForm = document.getElementById('serviceForm');
+    if (serviceForm) {
+        serviceForm.addEventListener('submit', handleServiceSubmit);
+    }
+
+    const viewServiceHistoryForm = document.getElementById('viewServiceHistoryForm');
+    if (viewServiceHistoryForm) {
+        viewServiceHistoryForm.addEventListener('submit', handleViewServiceHistorySubmit);
+    }
+
+    // Transfer forms
+    const transferForm = document.getElementById('transferForm');
+    if (transferForm) {
+        transferForm.addEventListener('submit', handleTransferSubmit);
+    }
+
+    const acceptTransferForm = document.getElementById('acceptTransferForm');
+    if (acceptTransferForm) {
+        acceptTransferForm.addEventListener('submit', handleAcceptTransferSubmit);
+    }
+
+    const cancelTransferForm = document.getElementById('cancelTransferForm');
+    if (cancelTransferForm) {
+        cancelTransferForm.addEventListener('submit', handleCancelTransferSubmit);
+    }
+
+    // Transaction forms
+    const createTransactionForm = document.getElementById('createTransactionForm');
+    if (createTransactionForm) {
+        createTransactionForm.addEventListener('submit', handleCreateTransactionSubmit);
+    }
+
+    const depositEscrowForm = document.getElementById('depositEscrowForm');
+    if (depositEscrowForm) {
+        depositEscrowForm.addEventListener('submit', handleDepositEscrowSubmit);
+    }
+
+    const completeTransactionForm = document.getElementById('completeTransactionForm');
+    if (completeTransactionForm) {
+        completeTransactionForm.addEventListener('submit', handleCompleteTransactionSubmit);
+    }
+
+    const disputeForm = document.getElementById('disputeForm');
+    if (disputeForm) {
+        disputeForm.addEventListener('submit', handleDisputeSubmit);
+    }
+
+    // View form
+    const viewForm = document.getElementById('viewForm');
+    if (viewForm) {
+        viewForm.addEventListener('submit', handleViewSubmit);
     }
 }
 
@@ -100,8 +158,104 @@ function showTab(tabName) {
     document.querySelector(`[onclick="showTab('${tabName}')"]`).classList.add('active');
 }
 
-// Register new car
-document.getElementById('registerForm').addEventListener('submit', async (e) => {
+// Function to show notifications
+function showNotification(message, isSuccess = true) {
+    const notification = document.createElement('div');
+    notification.className = `notification ${isSuccess ? 'success' : 'error'}`;
+    notification.textContent = message;
+    document.body.appendChild(notification);
+    
+    // Remove notification after 3 seconds
+    setTimeout(() => {
+        notification.remove();
+    }, 3000);
+}
+
+// Function to display service history
+async function displayServiceHistory(carId) {
+    try {
+        const history = await ownershipTransfer.getTransferHistory(carId);
+        const carDetails = await carNFT.getCarDetails(carId);
+        const transactions = await transactionManager.getCarTransactionHistory(carId);
+        
+        const historyContainer = document.getElementById('serviceHistoryContainer');
+        historyContainer.innerHTML = '';
+        
+        // Display car details
+        const carInfo = document.createElement('div');
+        carInfo.className = 'car-info';
+        carInfo.innerHTML = `
+            <h3>Car Details</h3>
+            <p>VIN: ${carDetails[0]}</p>
+            <p>Make: ${carDetails[2]}</p>
+            <p>Model: ${carDetails[3]}</p>
+            <p>Year: ${carDetails[6]}</p>
+        `;
+        historyContainer.appendChild(carInfo);
+        
+        // Display transfer history
+        const transferSection = document.createElement('div');
+        transferSection.className = 'history-section';
+        transferSection.innerHTML = '<h3>Ownership Transfer History</h3>';
+        
+        if (history.length > 0) {
+            const transferList = document.createElement('ul');
+            history.forEach(transfer => {
+                const date = new Date(transfer.timestamp * 1000);
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <p>From: ${transfer.from}</p>
+                    <p>To: ${transfer.to}</p>
+                    <p>Date: ${date.toLocaleDateString()}</p>
+                    <p>Reason: ${transfer.transferReason}</p>
+                `;
+                transferList.appendChild(li);
+            });
+            transferSection.appendChild(transferList);
+        } else {
+            transferSection.innerHTML += '<p>No transfer history available</p>';
+        }
+        historyContainer.appendChild(transferSection);
+        
+        // Display transaction history
+        const transactionSection = document.createElement('div');
+        transactionSection.className = 'history-section';
+        transactionSection.innerHTML = '<h3>Transaction History</h3>';
+        
+        if (transactions.length > 0) {
+            const transactionList = document.createElement('ul');
+            for (const txId of transactions) {
+                const tx = await transactionManager.getTransaction(txId);
+                const date = new Date(tx[3] * 1000);
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <p>Transaction ID: ${txId}</p>
+                    <p>Type: ${tx[6]}</p>
+                    <p>Price: ${ethers.utils.formatEther(tx[3])} ETH</p>
+                    <p>Date: ${date.toLocaleDateString()}</p>
+                    <p>Status: ${getTransactionStatus(tx[5])}</p>
+                `;
+                transactionList.appendChild(li);
+            }
+            transactionSection.appendChild(transactionList);
+        } else {
+            transactionSection.innerHTML += '<p>No transaction history available</p>';
+        }
+        historyContainer.appendChild(transactionSection);
+        
+    } catch (error) {
+        console.error("Error displaying service history:", error);
+        showNotification("Error fetching service history", false);
+    }
+}
+
+function getTransactionStatus(status) {
+    const statuses = ['Pending', 'Active', 'Completed', 'Cancelled', 'Disputed'];
+    return statuses[status] || 'Unknown';
+}
+
+// Handle form submissions
+async function handleRegisterSubmit(e) {
     e.preventDefault();
     try {
         const tx = await carNFT.registerCar(
@@ -116,16 +270,37 @@ document.getElementById('registerForm').addEventListener('submit', async (e) => 
         );
         
         await tx.wait();
-        alert('Car registered successfully!');
+        showNotification("Car registered successfully!");
         e.target.reset();
     } catch (error) {
         console.error("Error registering car:", error);
-        alert('Error registering car. Check console for details.');
+        showNotification(error.message, false);
     }
-});
+}
+
+async function handleServiceSubmit(e) {
+    e.preventDefault();
+    try {
+        const tx = await serviceHistory.recordService(
+            document.getElementById('serviceCarId').value,
+            document.getElementById('serviceType').value,
+            document.getElementById('serviceDescription').value,
+            document.getElementById('serviceProvider').value,
+            document.getElementById('serviceMileage').value,
+            document.getElementById('serviceParts').value || ''
+        );
+        
+        await tx.wait();
+        showNotification("Service record added successfully!");
+        e.target.reset();
+    } catch (error) {
+        console.error("Error recording service:", error);
+        showNotification(error.message, false);
+    }
+}
 
 // Ownership Transfer Functions
-document.getElementById('transferForm').addEventListener('submit', async (e) => {
+async function handleTransferSubmit(e) {
     e.preventDefault();
     try {
         const tx = await ownershipTransfer.initiateTransfer(
@@ -135,15 +310,15 @@ document.getElementById('transferForm').addEventListener('submit', async (e) => 
         );
         
         await tx.wait();
-        alert('Transfer initiated successfully!');
+        showNotification("Transfer initiated successfully!");
         e.target.reset();
     } catch (error) {
         console.error("Error initiating transfer:", error);
-        alert('Error initiating transfer. Check console for details.');
+        showNotification(error.message, false);
     }
-});
+}
 
-document.getElementById('acceptTransferForm').addEventListener('submit', async (e) => {
+async function handleAcceptTransferSubmit(e) {
     e.preventDefault();
     try {
         const tx = await ownershipTransfer.acceptTransfer(
@@ -151,15 +326,15 @@ document.getElementById('acceptTransferForm').addEventListener('submit', async (
         );
         
         await tx.wait();
-        alert('Transfer accepted successfully!');
+        showNotification('Transfer accepted successfully!');
         e.target.reset();
     } catch (error) {
         console.error("Error accepting transfer:", error);
-        alert('Error accepting transfer. Check console for details.');
+        showNotification(error.message, false);
     }
-});
+}
 
-document.getElementById('cancelTransferForm').addEventListener('submit', async (e) => {
+async function handleCancelTransferSubmit(e) {
     e.preventDefault();
     try {
         const tx = await ownershipTransfer.cancelTransfer(
@@ -167,16 +342,16 @@ document.getElementById('cancelTransferForm').addEventListener('submit', async (
         );
         
         await tx.wait();
-        alert('Transfer cancelled successfully!');
+        showNotification('Transfer cancelled successfully!');
         e.target.reset();
     } catch (error) {
         console.error("Error cancelling transfer:", error);
-        alert('Error cancelling transfer. Check console for details.');
+        showNotification(error.message, false);
     }
-});
+}
 
 // Transaction Functions
-document.getElementById('createTransactionForm').addEventListener('submit', async (e) => {
+async function handleCreateTransactionSubmit(e) {
     e.preventDefault();
     try {
         const documentHash = ethers.utils.id(document.getElementById('documentHash').value);
@@ -191,15 +366,15 @@ document.getElementById('createTransactionForm').addEventListener('submit', asyn
         );
         
         await tx.wait();
-        alert('Transaction created successfully!');
+        showNotification('Transaction created successfully!');
         e.target.reset();
     } catch (error) {
         console.error("Error creating transaction:", error);
-        alert('Error creating transaction. Check console for details.');
+        showNotification(error.message, false);
     }
-});
+}
 
-document.getElementById('depositEscrowForm').addEventListener('submit', async (e) => {
+async function handleDepositEscrowSubmit(e) {
     e.preventDefault();
     try {
         const transactionId = document.getElementById('escrowTransactionId').value;
@@ -216,9 +391,9 @@ document.getElementById('depositEscrowForm').addEventListener('submit', async (e
         console.error("Error depositing escrow:", error);
         alert('Error depositing escrow. Check console for details.');
     }
-});
+}
 
-document.getElementById('completeTransactionForm').addEventListener('submit', async (e) => {
+async function handleCompleteTransactionSubmit(e) {
     e.preventDefault();
     try {
         const tx = await transactionManager.completeTransaction(
@@ -232,9 +407,9 @@ document.getElementById('completeTransactionForm').addEventListener('submit', as
         console.error("Error completing transaction:", error);
         alert('Error completing transaction. Check console for details.');
     }
-});
+}
 
-document.getElementById('disputeForm').addEventListener('submit', async (e) => {
+async function handleDisputeSubmit(e) {
     e.preventDefault();
     try {
         const tx = await transactionManager.raiseDispute(
@@ -248,10 +423,10 @@ document.getElementById('disputeForm').addEventListener('submit', async (e) => {
         console.error("Error raising dispute:", error);
         alert('Error raising dispute. Check console for details.');
     }
-});
+}
 
 // Update view car details to include transfer and transaction history
-document.getElementById('viewForm').addEventListener('submit', async (e) => {
+async function handleViewSubmit(e) {
     e.preventDefault();
     try {
         const carId = document.getElementById('viewCarId').value;
@@ -316,10 +491,14 @@ document.getElementById('viewForm').addEventListener('submit', async (e) => {
         console.error("Error viewing car details:", error);
         alert('Error viewing car details. Check console for details.');
     }
-});
+}
+
+// Add event listener for viewing service history
+async function handleViewServiceHistorySubmit(e) {
+    e.preventDefault();
+    const carId = document.getElementById('historyCarId').value;
+    await displayServiceHistory(carId);
+}
 
 // Initialize when page loads
-window.addEventListener('load', async () => {
-    console.log("Page loaded, initializing...");
-    await init();
-}); 
+document.addEventListener('DOMContentLoaded', init); 
