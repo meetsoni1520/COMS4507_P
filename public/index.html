@@ -1,0 +1,223 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>AutoProof - Vehicle History Management</title>
+    <link rel="stylesheet" href="styles.css">
+    <script 
+        src="https://cdnjs.cloudflare.com/ajax/libs/ethers/5.7.2/ethers.umd.min.js" 
+        integrity="sha512-FWPmUMuCQqwhTwuN8eCK8oNqz7RXL3UKxKTHF8B8QnZDl65P1yNHwYz+cj2YgGtHqZUyxXvQmHtYHHm8fxY7g==" 
+        crossorigin="anonymous" 
+        referrerpolicy="no-referrer">
+    </script>
+</head>
+<body>
+    <div class="container">
+        <header>
+            <h1>AutoProof</h1>
+            <p>Blockchain-based Vehicle History Management</p>
+        </header>
+
+        <div class="tabs">
+            <button class="tab-btn active" onclick="showTab('register')">Register Car</button>
+            <button class="tab-btn" onclick="showTab('service')">Service History</button>
+            <button class="tab-btn" onclick="showTab('transfer')">Transfer Ownership</button>
+            <button class="tab-btn" onclick="showTab('transaction')">Transactions</button>
+            <button class="tab-btn" onclick="showTab('view')">View Car</button>
+        </div>
+
+        <div id="register" class="tab-content active">
+            <h2>Register New Car</h2>
+            <form id="registerForm">
+                <div class="form-group">
+                    <label for="vin">VIN Number:</label>
+                    <input type="text" id="vin" required>
+                </div>
+                <div class="form-group">
+                    <label for="ppsr">PPSR:</label>
+                    <input type="text" id="ppsr" required>
+                </div>
+                <div class="form-group">
+                    <label for="make">Make:</label>
+                    <input type="text" id="make" required>
+                </div>
+                <div class="form-group">
+                    <label for="model">Model:</label>
+                    <input type="text" id="model" required>
+                </div>
+                <div class="form-group">
+                    <label for="color">Color:</label>
+                    <input type="text" id="color" required>
+                </div>
+                <div class="form-group">
+                    <label for="licensePlate">License Plate:</label>
+                    <input type="text" id="licensePlate" required>
+                </div>
+                <div class="form-group">
+                    <label for="year">Year:</label>
+                    <input type="number" id="year" required>
+                </div>
+                <button type="submit" class="btn">Register Car</button>
+            </form>
+        </div>
+
+        <div id="service" class="tab-content">
+            <h2>Record Service</h2>
+            <form id="serviceForm">
+                <div class="form-group">
+                    <label for="carId">Car ID:</label>
+                    <input type="number" id="carId" required>
+                </div>
+                <div class="form-group">
+                    <label for="serviceType">Service Type:</label>
+                    <input type="text" id="serviceType" required>
+                </div>
+                <div class="form-group">
+                    <label for="description">Description:</label>
+                    <textarea id="description" required></textarea>
+                </div>
+                <div class="form-group">
+                    <label for="serviceProvider">Service Provider:</label>
+                    <input type="text" id="serviceProvider" required>
+                </div>
+                <div class="form-group">
+                    <label for="mileage">Mileage:</label>
+                    <input type="number" id="mileage" required>
+                </div>
+                <div class="form-group">
+                    <label for="parts">Parts Replaced (comma-separated):</label>
+                    <input type="text" id="parts" placeholder="e.g., Oil Filter, Engine Oil">
+                </div>
+                <button type="submit" class="btn">Record Service</button>
+            </form>
+        </div>
+
+        <div id="transfer" class="tab-content">
+            <h2>Transfer Vehicle Ownership</h2>
+            <form id="transferForm">
+                <div class="form-group">
+                    <label for="transferCarId">Car ID:</label>
+                    <input type="number" id="transferCarId" required>
+                </div>
+                <div class="form-group">
+                    <label for="recipientAddress">Recipient Address:</label>
+                    <input type="text" id="recipientAddress" required>
+                </div>
+                <div class="form-group">
+                    <label for="transferReason">Transfer Reason:</label>
+                    <input type="text" id="transferReason" required>
+                </div>
+                <button type="submit" class="btn">Initiate Transfer</button>
+            </form>
+
+            <div class="sub-section">
+                <h3>Accept Transfer</h3>
+                <form id="acceptTransferForm">
+                    <div class="form-group">
+                        <label for="acceptCarId">Car ID:</label>
+                        <input type="number" id="acceptCarId" required>
+                    </div>
+                    <button type="submit" class="btn">Accept Transfer</button>
+                </form>
+            </div>
+
+            <div class="sub-section">
+                <h3>Cancel Transfer</h3>
+                <form id="cancelTransferForm">
+                    <div class="form-group">
+                        <label for="cancelCarId">Car ID:</label>
+                        <input type="number" id="cancelCarId" required>
+                    </div>
+                    <button type="submit" class="btn">Cancel Transfer</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="transaction" class="tab-content">
+            <h2>Vehicle Transactions</h2>
+            <form id="createTransactionForm">
+                <div class="form-group">
+                    <label for="transactionCarId">Car ID:</label>
+                    <input type="number" id="transactionCarId" required>
+                </div>
+                <div class="form-group">
+                    <label for="buyerAddress">Buyer Address:</label>
+                    <input type="text" id="buyerAddress" required>
+                </div>
+                <div class="form-group">
+                    <label for="price">Price (ETH):</label>
+                    <input type="number" id="price" step="0.001" required>
+                </div>
+                <div class="form-group">
+                    <label for="transactionType">Transaction Type:</label>
+                    <select id="transactionType" required>
+                        <option value="Sale">Sale</option>
+                        <option value="Lease">Lease</option>
+                        <option value="Trade-in">Trade-in</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label for="documentHash">Document Hash:</label>
+                    <input type="text" id="documentHash" required>
+                </div>
+                <button type="submit" class="btn">Create Transaction</button>
+            </form>
+
+            <div class="sub-section">
+                <h3>Deposit Escrow</h3>
+                <form id="depositEscrowForm">
+                    <div class="form-group">
+                        <label for="escrowTransactionId">Transaction ID:</label>
+                        <input type="number" id="escrowTransactionId" required>
+                    </div>
+                    <button type="submit" class="btn">Deposit Escrow</button>
+                </form>
+            </div>
+
+            <div class="sub-section">
+                <h3>Complete Transaction</h3>
+                <form id="completeTransactionForm">
+                    <div class="form-group">
+                        <label for="completeTransactionId">Transaction ID:</label>
+                        <input type="number" id="completeTransactionId" required>
+                    </div>
+                    <button type="submit" class="btn">Complete Transaction</button>
+                </form>
+            </div>
+
+            <div class="sub-section">
+                <h3>Raise Dispute</h3>
+                <form id="disputeForm">
+                    <div class="form-group">
+                        <label for="disputeTransactionId">Transaction ID:</label>
+                        <input type="number" id="disputeTransactionId" required>
+                    </div>
+                    <button type="submit" class="btn">Raise Dispute</button>
+                </form>
+            </div>
+        </div>
+
+        <div id="view" class="tab-content">
+            <h2>View Car Details</h2>
+            <form id="viewForm">
+                <div class="form-group">
+                    <label for="viewCarId">Car ID:</label>
+                    <input type="number" id="viewCarId" required>
+                </div>
+                <button type="submit" class="btn">View Details</button>
+            </form>
+            <div id="carDetails" class="details-container">
+                <!-- Car details will be displayed here -->
+            </div>
+            <div id="transferHistory" class="details-container">
+                <!-- Transfer history will be displayed here -->
+            </div>
+            <div id="transactionHistory" class="details-container">
+                <!-- Transaction history will be displayed here -->
+            </div>
+        </div>
+    </div>
+    <script src="app.js"></script>
+</body>
+</html> 

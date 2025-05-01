@@ -1,0 +1,20 @@
+await carNFT.registerCar("VIN123456789", "PPSR123", "Toyota", "Camry", "Blue", "ABC123", 2020, owner.address)
+const [owner] = await ethers.getSigners()
+const serviceHistory = await ServiceHistory.attach("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512")
+const carNFT = await CarNFT.attach("0x5FbDB2315678afecb367f032d93F642f64180aa3")
+const ServiceHistory = await ethers.getContractFactory("ServiceHistory")
+const CarNFT = await ethers.getContractFactory("CarNFT");
+const serviceHistory = await ServiceHistory.attach("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512");
+const ServiceHistory = await ethers.getConconst carNFT = await CarNFT.attach("0x5FbDB2315678afecb367f032d93F642f64180aa3");
+const CarNFT = await ethers.getContractFactory("CarNFT");
+const CarNFT = await ethers.getContractFactory("CarNFT")
+await carNFT.registerCar("VIN123456789", "PPSR123", "Toyota", "Camry", "Blue", "ABC123", 2020, owner.address)
+const serviceHistory = await ServiceHistory.attach("0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512")
+const carNFT = await CarNFT.attach("0x5FbDB2315678afecb367f032d93F642f64180aa3")
+const ServiceHistory = await ethers.getContractFactory
+const CarNFT = await ethers.getContractFactory("CarNFT")
+const ServiceHistory = await ethers.getContractFactory("ServiceHistory")
+const ServiceHistory = await ethers.getContractFactory
+const CarNFT = await ethers.getContractFactory("CarNFT")
+start
+ls
