@@ -19,6 +19,12 @@ async function main() {
   await transactionManager.deployed();
   console.log("TransactionManager deployed to:", transactionManager.address);
 
+  // Deploy ServiceHistory contract
+  const ServiceHistory = await hre.ethers.getContractFactory("ServiceHistory");
+  const serviceHistory = await ServiceHistory.deploy(carNFT.address);
+  await serviceHistory.deployed();
+  console.log("ServiceHistory deployed to:", serviceHistory.address);
+
   // Grant approval to OwnershipTransfer contract
   await carNFT.setApprovalForAll(ownershipTransfer.address, true);
   console.log("Granted approval to OwnershipTransfer contract");

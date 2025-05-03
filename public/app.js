@@ -2,7 +2,7 @@
 const CAR_NFT_ADDRESS = "0x5FbDB2315678afecb367f032d93F642f64180aa3";
 const OWNERSHIP_TRANSFER_ADDRESS = "0xe7f1725E7734CE288F8367e1Bb143E90bb3F0512";
 const TRANSACTION_MANAGER_ADDRESS = "0x9fE46736679d2D9a65F0992F2272dE9f3c7fa6e0";
-const SERVICE_HISTORY_ADDRESS = "0x5FC8d32690cc91D4c39d9d3abcBD16989F875707";
+const SERVICE_HISTORY_ADDRESS = "0x948B3c65b89DF0B4894ABE91E6D02FE579834F8F";
 
 // Contract ABIs
 const CAR_NFT_ABI = [
@@ -30,8 +30,12 @@ const TRANSACTION_MANAGER_ABI = [
 
 // Add Service History ABI
 const SERVICE_HISTORY_ABI = [
-    "function recordService(uint256 carId, string memory serviceType, string memory description, string memory provider, uint256 mileage, string memory parts) public",
-    "function getServiceHistory(uint256 carId) public view returns (tuple(string serviceType, string description, string provider, uint256 mileage, string parts, uint256 timestamp)[])"
+    "function recordService(uint256 carId, string memory serviceType, string memory description, string memory serviceProvider, uint256 mileage, string[] memory partsReplaced) public",
+    "function getServiceHistory(uint256 carId) public view returns (tuple(uint256 timestamp, string serviceType, string description, string serviceProvider, uint256 mileage, string[] partsReplaced)[])",
+    "function reportAccident(uint256 carId, string memory description) public",
+    "function addModification(uint256 carId, string memory modification) public",
+    "function hasAccidentHistory(uint256 carId) public view returns (bool)",
+    "function getModifications(uint256 carId) public view returns (string[] memory)"
 ];
 
 // Global variables for provider, signer and contracts
@@ -160,9 +164,20 @@ function showTab(tabName) {
 
 // Function to show notifications
 function showNotification(message, isSuccess = true) {
+    // Shorten error messages if too long
+    let displayMessage = message;
+    if (!isSuccess && typeof message === 'string') {
+        // Try to extract a concise error reason
+        const match = message.match(/reason=\"([^\"]+)\"/);
+        if (match && match[1]) {
+            displayMessage = match[1];
+        } else if (message.length > 120) {
+            displayMessage = message.slice(0, 120) + '...';
+        }
+    }
     const notification = document.createElement('div');
     notification.className = `notification ${isSuccess ? 'success' : 'error'}`;
-    notification.textContent = message;
+    notification.textContent = displayMessage;
     document.body.appendChild(notification);
     
     // Remove notification after 3 seconds
@@ -177,6 +192,7 @@ async function displayServiceHistory(carId) {
         const history = await ownershipTransfer.getTransferHistory(carId);
         const carDetails = await carNFT.getCarDetails(carId);
         const transactions = await transactionManager.getCarTransactionHistory(carId);
+        const serviceRecords = await serviceHistory.getServiceHistory(carId);
         
         const historyContainer = document.getElementById('serviceHistoryContainer');
         historyContainer.innerHTML = '';
@@ -193,11 +209,35 @@ async function displayServiceHistory(carId) {
         `;
         historyContainer.appendChild(carInfo);
         
+        // Display service history
+        const serviceSection = document.createElement('div');
+        serviceSection.className = 'history-section';
+        serviceSection.innerHTML = '<h3>Service History</h3>';
+        if (serviceRecords.length > 0) {
+            const serviceList = document.createElement('ul');
+            serviceRecords.forEach(record => {
+                const date = new Date(record.timestamp * 1000);
+                const li = document.createElement('li');
+                li.innerHTML = `
+                    <p>Date: ${date.toLocaleDateString()}</p>
+                    <p>Type: ${record.serviceType}</p>
+                    <p>Description: ${record.description}</p>
+                    <p>Provider: ${record.serviceProvider}</p>
+                    <p>Mileage: ${record.mileage}</p>
+                    <p>Parts Replaced: ${record.partsReplaced.join(', ')}</p>
+                `;
+                serviceList.appendChild(li);
+            });
+            serviceSection.appendChild(serviceList);
+        } else {
+            serviceSection.innerHTML += '<p>No service history available</p>';
+        }
+        historyContainer.appendChild(serviceSection);
+        
         // Display transfer history
         const transferSection = document.createElement('div');
         transferSection.className = 'history-section';
         transferSection.innerHTML = '<h3>Ownership Transfer History</h3>';
-        
         if (history.length > 0) {
             const transferList = document.createElement('ul');
             history.forEach(transfer => {
@@ -221,7 +261,6 @@ async function displayServiceHistory(carId) {
         const transactionSection = document.createElement('div');
         transactionSection.className = 'history-section';
         transactionSection.innerHTML = '<h3>Transaction History</h3>';
-        
         if (transactions.length > 0) {
             const transactionList = document.createElement('ul');
             for (const txId of transactions) {
@@ -281,13 +320,23 @@ async function handleRegisterSubmit(e) {
 async function handleServiceSubmit(e) {
     e.preventDefault();
     try {
+        const carId = parseInt(document.getElementById('serviceCarId').value);
+        const serviceType = document.getElementById('serviceType').value;
+        const description = document.getElementById('serviceDescription').value;
+        const provider = document.getElementById('serviceProvider').value;
+        const mileage = parseInt(document.getElementById('serviceMileage').value);
+        const parts = document.getElementById('serviceParts').value
+            .split(',')
+            .map(part => part.trim())
+            .filter(part => part.length > 0);
+
         const tx = await serviceHistory.recordService(
-            document.getElementById('serviceCarId').value,
-            document.getElementById('serviceType').value,
-            document.getElementById('serviceDescription').value,
-            document.getElementById('serviceProvider').value,
-            document.getElementById('serviceMileage').value,
-            document.getElementById('serviceParts').value || ''
+            carId,
+            serviceType,
+            description,
+            provider,
+            mileage,
+            parts
         );
         
         await tx.wait();
